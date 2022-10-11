@@ -32,12 +32,12 @@ class ginSetup(object):
 			self.metadata[1]			
 		except:
 			self.metadata = [0,0]
-			print " * ginSODA's meta-data not found."
+			print(" * ginSODA's meta-data not found.")
 
 		banner()
 
-		print " * Assuming architecture SM_%s" % (self._architecture)
-		print " * Detected available shared memory per SM: %d bytes" % (self.query_available_shared_memory())
+		print(" * Assuming architecture SM_%s" % (self._architecture))
+		print(" * Detected available shared memory per SM: %d bytes" % (self.query_available_shared_memory()))
 
 	def query_available_shared_memory(self):
 		import pycuda.autoinit
@@ -57,9 +57,9 @@ class ginSetup(object):
 			return "%d%d" % (attrs[pycuda._driver.device_attribute.COMPUTE_CAPABILITY_MAJOR], attrs[pycuda._driver.device_attribute.COMPUTE_CAPABILITY_MINOR])
 
 	def check_reactions(self):
-		print " * System of coupled ODEs:"
+		print(" * System of coupled ODEs:")
 		for e,v in zip(self.SD.equations_rhs, self.SD.variables):
-			print "\td("+v+")/dt\t = "+e
+			print("\td("+v+")/dt\t = "+e)
 
 	def check_last_model(self, saved_lasthash):
 		""" This method checks whether the model changed or not since the last simulation.
@@ -75,10 +75,10 @@ class ginSetup(object):
 		try:
 			read_lastaccess = os.stat("__jitkernel.cu")[-2]
 		except:
-			print "ERROR: __jitkernel.cu not found, aborting"
+			print("ERROR: __jitkernel.cu not found, aborting")
 			exit(1)		
 		if saved_lastaccess<read_lastaccess:
-			print " * The file '__jitkernel.cu' changed since last access, ginSODA must re-build the whole binary executable file."
+			print(" * The file '__jitkernel.cu' changed since last access, ginSODA must re-build the whole binary executable file.")
 			return True, read_lastaccess
 		return False, read_lastaccess
 
@@ -108,26 +108,26 @@ class ginSetup(object):
 		savetxt(self.model_dir+"/MX_0", initial_values, delimiter="\t")
 		savetxt(self.model_dir+"/t_vector", time_instants)
 		savetxt(self.model_dir+"/cs_vector", array(observed), fmt="%d")
-		print " * Model files created in", self.model_dir
+		print(" * Model files created in", self.model_dir)
 
 	def create_kernel(self, path):
 		with open(path, "w") as fo:
 			fo.write(self.SD.create_LSODA_headers())
-			print " * Kernel", path, "created"
+			print(" * Kernel", path, "created")
 
 	def compile(self, path_main, path_ginsoda, JUST_LINK=False, COMPILE_2B=False, verbose=True):
 
-		print " * Checking out ginSODA's integration files, please wait..."
+		print(" * Checking out ginSODA's integration files, please wait...")
 
 		FIRST_RUN, read_lastaccess = self.check_last_access(self.metadata[0])
 		MODEL_CHANGED, modelhash   = self.check_last_model(self.metadata[1])	
 
 		if FIRST_RUN:
-			print " * First run ever"
+			print(" * First run ever")
 			SKIP_COMPILE_1A = False
 			COMPILE_2B = True
 		elif MODEL_CHANGED:
-			print " * Model changed since last simulation"
+			print(" * Model changed since last simulation")
 			SKIP_COMPILE_1A = True
 			COMPILE_2B = True
 			#print not JUST_LINK and not SKIP_COMPILE_1A
@@ -175,12 +175,12 @@ class ginSetup(object):
 
 		if COMPILE_2B:
 
-			print " * Recompiling the simulation module"
+			print(" * Recompiling the simulation module")
 
 			# CPU-side compilation of the simulator 
 			command1 = [self.cuda_compiler, "--keep-dir", self.temp_dir_objects, "-maxrregcount=0", "--machine" , str(self.machine_BITS), "--compile",  "-Wno-deprecated-gpu-targets", 
 			"--compiler-options", OPTIMIZATION_FLAGS, "-o", self.temp_dir_objects+"/"+path_ginsoda+".obj", path_ginsoda, "-clean", "-w"]
-			if verbose: print "[Step #1]", " ".join(command1)
+			if verbose: print("[Step #1]", " ".join(command1))
 			ret = check_output(command1)
 			#print ret
 			
@@ -190,14 +190,14 @@ class ginSetup(object):
 			command3 = [self.cuda_compiler, "-arch=sm_"+self._architecture, 
 		    "--keep-dir", self.temp_dir_objects, "-maxrregcount=0", "--machine", str(self.machine_BITS), "--compile", "-cudart", "static", "-use_fast_math", "-Wno-deprecated-gpu-targets",   
 	    	"--compiler-options", OPTIMIZATION_FLAGS, "-o", self.temp_dir_objects+"/"+path_ginsoda+".obj", path_ginsoda, "-w"]
-			if verbose: print "[Step #2]", " ".join(command3)
+			if verbose: print("[Step #2]", " ".join(command3))
 			ret = check_output(command3)
 
 			#print ret		
 
 			if not SKIP_COMPILE_1A:
 
-				print " * Recompiling the whole ginSODA"
+				print(" * Recompiling the whole ginSODA")
 
 				# CPU-side compilation of the main
 				command2 = [self.cuda_compiler, "--keep-dir", self.temp_dir_objects, "-maxrregcount=0", 
@@ -205,9 +205,9 @@ class ginSetup(object):
 				"--compiler-options", OPTIMIZATION_FLAGS,
 				# -D_MBCS -Xcompiler \"/EHsc /W0 /nologo /O2 /Zi  /MD \"
 				"-o", self.temp_dir_objects+"/"+path_main+".obj", path_main, "-clean", "-w"]
-				if verbose: print "[Step #3]", command2
+				if verbose: print("[Step #3]", command2)
 				ret = check_output(command2)
-				print ret
+				print(ret)
 				
 				# GPU-side compilation of the main
 				# command4 = [self.cuda_compiler, "-gencode=arch=compute_"+self._architecture+",code=\"sm_"+self._architecture+",compute_"+self._architecture+"\"",
@@ -218,7 +218,7 @@ class ginSetup(object):
 				"--compiler-options", OPTIMIZATION_FLAGS,
 				#  -D_MBCS -Xcompiler \"/EHsc /W0 /nologo /O2 /Zi /MD \"
 				"-o", self.temp_dir_objects+"/"+path_main+".obj", path_main, "-w"]
-				if verbose: print "[Step #4]",  command4
+				if verbose: print("[Step #4]",  command4)
 				ret = check_output(command4)
 				#print ret	
 			
@@ -230,12 +230,12 @@ class ginSetup(object):
 			"--machine",  str(self.machine_BITS),
 			# "-Xcompiler", "\"/MD /Ox\"", 
 			 "-o", self.binary, "-w"]
-			if verbose: print " ".join(commands5)
+			if verbose: print(" ".join(commands5))
 			ret = check_output(commands5)
 			# print ret
 
 		savetxt("metadata", [read_lastaccess, modelhash], fmt="%d")
-		print " * ginSODA simulator successfully built."	
+		print(" * ginSODA simulator successfully built.")	
 
 
 	def create_ginsoda_files(self, lsoda_settings):
@@ -243,24 +243,24 @@ class ginSetup(object):
 		try:
 			savetxt(self.model_dir+"/rtol", [lsoda_settings["rtol"]], delimiter="\n")
 		except:
-			print "WARNING: no relative tolerance specified, using default 1e-6"
+			print("WARNING: no relative tolerance specified, using default 1e-6")
 		finally:
-			print " * Relative tolerances file created"
+			print(" * Relative tolerances file created")
 
 		try:
 			savetxt(self.model_dir+"/atol_vector", lsoda_settings["atol_vector"], delimiter="\n")
 		except:
-			print "WARNING: no absolute tolerance vector specified, using default 1e-12"
+			print("WARNING: no absolute tolerance vector specified, using default 1e-12")
 		finally:
-			print " * Absolute tolerances file created"
+			print(" * Absolute tolerances file created")
 
 
 		try:
 			savetxt(self.model_dir+"/max_steps", [lsoda_settings["max_steps"]], delimiter="\n", fmt="%d")
 		except:
-			print "WARNING: no max steps specified, using default 10000"
+			print("WARNING: no max steps specified, using default 10000")
 		finally:
-			print " * Max internal steps file created"
+			print(" * Max internal steps file created")
 
 
 
@@ -281,7 +281,7 @@ class ginSetup(object):
 			raise Exception("number of initial values per thread is different with respect to the number of parameters")
 		
 		if len(observed)==0: observed=arange(len(initial_values[0])) # sample all species if observed are not specified 
-		print " * Observed variables indices:", observed
+		print(" * Observed variables indices:", observed)
 
 		self.differentiate_everything(verbose=False)
 
@@ -296,7 +296,7 @@ class ginSetup(object):
 
 		end_files_creation = time.time()
 
-		print "[t] Files creation required %f seconds" % (end_files_creation - start_files_creation)
+		print("[t] Files creation required %f seconds" % (end_files_creation - start_files_creation))
 
 		start_compile_time = time.time()
 
@@ -304,7 +304,7 @@ class ginSetup(object):
 
 		end_compile_time = time.time()
 
-		print "[t] Compilation completed in %f seconds" % (end_compile_time - start_compile_time)
+		print("[t] Compilation completed in %f seconds" % (end_compile_time - start_compile_time))
 
 		threads, blocks = self.organize_work(len(initial_values))		
 
@@ -314,17 +314,17 @@ class ginSetup(object):
 		
 		end_launch = time.time()
 
-		print "[t] Simulation completed in %f seconds" % (end_launch - start_launch)
+		print("[t] Simulation completed in %f seconds" % (end_launch - start_launch))
 
 		end_total_time = time.time()
 
-		print "[t] Overall execution completed in %f seconds" % (end_total_time - start_total_time)
+		print("[t] Overall execution completed in %f seconds" % (end_total_time - start_total_time))
 
 		if dump_cuda_output:
-			print " * Output returned by the CUDA binary:"
-			print "*"*80
-			print ret
-			print "*"*80
+			print(" * Output returned by the CUDA binary:")
+			print("*"*80)
+			print(ret)
+			print("*"*80)
 
 		return self.organize_results(ret, time_instants)
 
@@ -340,7 +340,7 @@ class ginSetup(object):
 				all_dynamics.append(full_riga.reshape((len(time_instants),species)))
 				full_riga = []			
 			else:
-				pr = map(float, riga.split())
+				pr = list(map(float, riga.split()))
 				full_riga.extend(pr)
 		return all_dynamics
 
@@ -366,14 +366,14 @@ class ginSetup(object):
 		# launch simulation		
 
 		if self._use_shared_memory:
-			print " * Using shared memory"
+			print(" * Using shared memory")
 			sh = "1" 
 		else: 
-			print " * Not using shared memory"
+			print(" * Not using shared memory")
 			sh = "0"
 
-		print " * Launching job: %d threads subdivided into %d blocks" % (threads*blocks, blocks)
-		print " * Launching model in", self.model_dir
+		print(" * Launching job: %d threads subdivided into %d blocks" % (threads*blocks, blocks))
+		print(" * Launching model in", self.model_dir)
 		command = [self.binary, "-i", self.model_dir,  "-o", self.output_dir, "-p", self.output_prefix,
 		"-b", str(blocks), "-g", str(GPU), "-d", "0", "-h", sh, "-t", "1"]
 		ret = check_output(command)
@@ -386,7 +386,7 @@ class ginSetup(object):
 		self.add_variables(variables)
 		self.add_parameters(parameters)
 		self.add_equations(equations)
-		print " * Model loaded"
+		print(" * Model loaded")
 
 	def add_variables(self, variables):
 		for v in variables:
@@ -424,23 +424,23 @@ class ginSetup(object):
 		total = var_bytes + params_bytes + jacob_bytes + rwork_bytes + lsoda_bytes + iwork_bytes + output_bytes + commonblock
 
 
-		print " Dimension of the system:"
-		print " - variables:", len(self.SD.variables), "\tmemory used:", var_bytes, "bytes"
-		print " - parameters:", len(self.SD.parameters), "\tmemory used:", params_bytes, "bytes"
-		print " - jacobian:", len(self.SD.variables)**2, "elements\tmemory used:", jacob_bytes, "bytes"
-		print " - service LSODA structures:", lsoda_bytes, "bytes"
-		print " - rwork: ", rwork_bytes, "bytes"
-		print " - iwork: ", iwork_bytes, "bytes"
-		print " - output dynamics", output_bytes, "bytes"
-		print " - common block:", commonblock, "bytes"
-		print " - TOTAL estimated global memory requirements:", total/1e6, "MB for %d threads" % (THREADS)
+		print(" Dimension of the system:")
+		print(" - variables:", len(self.SD.variables), "\tmemory used:", var_bytes, "bytes")
+		print(" - parameters:", len(self.SD.parameters), "\tmemory used:", params_bytes, "bytes")
+		print(" - jacobian:", len(self.SD.variables)**2, "elements\tmemory used:", jacob_bytes, "bytes")
+		print(" - service LSODA structures:", lsoda_bytes, "bytes")
+		print(" - rwork: ", rwork_bytes, "bytes")
+		print(" - iwork: ", iwork_bytes, "bytes")
+		print(" - output dynamics", output_bytes, "bytes")
+		print(" - common block:", commonblock, "bytes")
+		print(" - TOTAL estimated global memory requirements:", total/1e6, "MB for %d threads" % (THREADS))
 		estimated_sm = self.estimate_shared_memory_requirements(THREADS, len(self.SD.variables))
-		print " - Shared memory requirements: %d bytes per block" % (estimated_sm)
+		print(" - Shared memory requirements: %d bytes per block" % (estimated_sm))
 		if estimated_sm<=self.query_available_shared_memory():
-			print "   ginSODA automatically ENABLED shared memory support"
+			print("   ginSODA automatically ENABLED shared memory support")
 			self._use_shared_memory = True
 		else:
-			print "   ginSODA automatically DISABLED shared memory support"
+			print("   ginSODA automatically DISABLED shared memory support")
 			self._use_shared_memory = False
 		return total
 
@@ -452,12 +452,12 @@ class ginSetup(object):
 
 
 def banner():
-	print "        _      ________  ___  ___ "
-	print "  ___ _(_)__  / __/ __ \/ _ \/ _ |"
-	print " / _ `/ / _ \_\ \/ /_/ / // / __ |"
-	print " \_, /_/_//_/___/\____/____/_/ |_|"
-	print "/___/                version 0.9.0"
-	print 
+	print("        _      ________  ___  ___ ")
+	print("  ___ _(_)__  / __/ __ \/ _ \/ _ |")
+	print(" / _ `/ / _ \_\ \/ /_/ / // / __ |")
+	print(" \_, /_/_//_/___/\____/____/_/ |_|")
+	print("/___/                version 0.9.0")
+	print() 
 
 if __name__ == '__main__':
 

@@ -25,7 +25,7 @@ if __name__ == '__main__':
 	#parameters     = [[0.0025,0.1,5.0]]*THREADS
 	parameters      = []
 	perturbation    = linspace(2.5e-3, 2.5e-2, THREADS)
-	for x in xrange(THREADS):
+	for x in range(THREADS):
 		parameters.append( [ perturbation[x], 0.1, 5.0] )
 
 	initial_values = [[1000,500,0,0]]*THREADS
@@ -49,9 +49,9 @@ if __name__ == '__main__':
 	)
 	
 	#exit()
-	for s in xrange(4):
+	for s in range(4):
 		plot(all_dynamics[0].T[0], all_dynamics[0].T[s+1], label=GS.SD.variables[s]+"_model1")
-	for s in xrange(4):
+	for s in range(4):
 		plot(all_dynamics[32].T[0], all_dynamics[32].T[s+1], "--", label=GS.SD.variables[s]+"_model2")
 	legend(ncol=2)
 	show()

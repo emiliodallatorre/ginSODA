@@ -41,13 +41,13 @@ class SystemsDifferentiator(object):
 		self.jacobian = []
 		
 		if verbose:
-			print "System of ODEs:"
+			print("System of ODEs:")
 			for m, equation in enumerate(self.equations_rhs):
-				print "f_"+str(m)+" = "+ equation
-			print
+				print("f_"+str(m)+" = "+ equation)
+			print()
 		
 		if verbose:
-			print "Jacobian matrix:"
+			print("Jacobian matrix:")
 		
 		for m, equation in enumerate(self.equations_rhs):			
 			for n, v in enumerate(self.variables):
@@ -61,8 +61,8 @@ class SystemsDifferentiator(object):
 				self.jacobian.append(res)
 				if verbose:
 					ver = "df_"+str(m)+"/d"+v+" = "+ derivative
-					print ver,"\t",
-			if verbose: print
+					print(ver,"\t", end=' ')
+			if verbose: print()
 
 
 	def create_LSODA_headers(self):
